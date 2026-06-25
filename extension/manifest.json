@@ -1,0 +1,18 @@
+{
+    "manifest_version": 3,
+    "name": "Wordle Watcher",
+    "version": "1.0",
+    "background": {
+        "service_worker": "background.js"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "https://www.nytimes.com/games/wordle/*"
+            ],
+            "js": [
+                "content.js"
+            ]
+        }
+    ]
+}
