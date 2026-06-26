@@ -1,3 +1,4 @@
+from flask import Flask, jsonify
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import logging
@@ -13,42 +14,37 @@ log.setLevel(logging.ERROR)
 app.logger.disabled = True
 logging.getLogger("flask").disabled = True
 
-answer = engine.get_answer("2026-06-20")
+answer = engine.get_answer("2026-06-05")
 # answer = engine.get_answer()
+
 cands = engine.cands
-greens = engine.greens
-yellows = engine.yellows
-blacks = engine.blacks
 
 
-@app.route("/guess", methods=["POST", "OPTIONS"])
+@app.route("/guess", methods=["POST"])
 def guess():
-
-    if request.method == "OPTIONS":
-        response = app.make_default_options_response()
-        response.headers["Access-Control-Allow-Origin"] = "*"
-        response.headers["Access-Control-Allow-Headers"] = "Content-Type"
-        response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
-        return response
-
     global cands
-    global greens
-    global yellows
-    global blacks
-    data = request.json
-    guess = data["guess"]
-    engine.feedback(guess, answer)
-    cands = engine.prune_words(cands)
+    try:
+        data = request.get_json(force=True)
+        guess = data["guess"]
 
-    print(f"Guess: {guess}\nPossible words remaining: {len(cands)}", flush=True)
+        engine.feedback(guess, answer)
+        cands = engine.prune_words(cands)
 
-    response = jsonify(ok=True)
-    response.headers["Access-Control-Allow-Origin"] = "*"
-    return response
+        remaining = len(cands)
+        print(f"Guess: {guess}\nPossible words remaining: {remaining}", flush=True)
+
+        return jsonify(ok=True, remaining=remaining)
+    except Exception as e:
+        app.logger.exception("guess failed")
+        return jsonify(ok=False, error=str(e)), 500
 
 
-port = 5050
+@app.get("/result")
+def result():
+    return jsonify(value=len(cands))
+
 
 if __name__ == "__main__":
+    port = 5050
     print(f"Server running on {port}", flush=True)
-    app.run(host="127.0.0.1", port=port, debug=False, use_reloader=False)
+    app.run(host="127.0.0.1", port=port, debug=False, use_reloader=False, threaded=True)
