@@ -14,9 +14,6 @@ log.setLevel(logging.ERROR)
 app.logger.disabled = True
 logging.getLogger("flask").disabled = True
 
-answer = engine.get_answer("2026-06-05")
-# answer = engine.get_answer()
-
 cands = engine.cands
 
 
@@ -25,7 +22,12 @@ def guess():
     global cands
     try:
         data = request.get_json(force=True)
-        guess = data["guess"]
+        guess = data.get("guess")
+        date = data.get("date")
+
+        print(f"Worlde date: {date}")
+
+        answer = engine.get_answer(date)
 
         engine.feedback(guess, answer)
         cands = engine.prune_words(cands)

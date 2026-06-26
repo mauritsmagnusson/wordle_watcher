@@ -6,18 +6,16 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     fetch("http://127.0.0.1:5050/guess", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ guess: msg.guess })
-    })
-        .then(async (r) => {
-            const text = await r.text();
-            console.log("RAW FLASK RESPONSE:", text);
-            return JSON.parse(text);
+        body: JSON.stringify({
+            guess: msg.guess,
+            date: msg.date
         })
+    })
+        .then((r) => r.json())
         .then((data) => {
             sendResponse({ ok: true, remaining: data.remaining });
         })
         .catch((err) => {
-            console.error("FETCH FAILED:", err);
             sendResponse({ ok: false, error: String(err) });
         });
 

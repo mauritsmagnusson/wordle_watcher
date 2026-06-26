@@ -16,6 +16,13 @@ function render() {
     }
 }
 
+function getDateFromUrl(url) {
+    const match = url.match(/(\d{4}-\d{2}-\d{2})\/?$/);
+    return match ? match[1] : null;
+}
+
+const wordleDate = getDateFromUrl(location.href);
+
 document.addEventListener("keydown", (e) => {
 
     if (/^[a-zA-Z]$/.test(e.key)) {
@@ -39,7 +46,10 @@ document.addEventListener("keydown", (e) => {
         console.log("SENDING GUESS", guess)
 
         chrome.runtime.sendMessage(
-            { type: "guess", guess },
+            {
+                type: "guess", guess,
+                date: wordleDate
+            },
             (response) => {
                 console.log("CALLBACK RESPONSE:", response);
                 if (response?.remaining !== undefined) {
