@@ -26,16 +26,15 @@ def guess():
         date = data.get("date")
 
         print(f"Worlde date: {date}")
+        answer = engine.get_answer(date) if date else engine.get_answer()
 
-        answer = engine.get_answer(date)
-
-        engine.feedback(guess, answer)
+        _, solved = engine.feedback(guess, answer)
         cands = engine.prune_words(cands)
 
         remaining = len(cands)
         print(f"Guess: {guess}\nPossible words remaining: {remaining}", flush=True)
 
-        return jsonify(ok=True, remaining=remaining)
+        return jsonify(ok=True, remaining=remaining, solved=solved)
     except Exception as e:
         app.logger.exception("guess failed")
         return jsonify(ok=False, error=str(e)), 500

@@ -56,7 +56,8 @@ def feedback(guess, answer):
             yellows[i] = c
             feedback[i] = "Y"
     # print(feedback)
-    return feedback
+    solved = all(r == "G" for r in feedback)
+    return feedback, solved
 
 
 def prune_words(cands):

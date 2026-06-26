@@ -3,13 +3,17 @@ console.log("EXTENSION CONTEXT TEST:", typeof chrome, chrome?.runtime);
 
 let buffer = "";
 let lastGuess = "";
+let solved = false;
 let remainingGuesses = 12972;
 
 function render() {
     const pct = Math.round((remainingGuesses / 12972) * 100)
     if (remainingGuesses === 12972) {
         box.innerText = `Possible guesses: ${remainingGuesses} (100%)`;
-    } else if (pct < 1) {
+    } if (solved) {
+        box.innerText = "Good job!🎉"
+    }
+    else if (pct < 1) {
         box.innerText = `Remaining valid guesses: ${remainingGuesses} (< 1%)`;
     } else {
         box.innerText = `Remaining valid guesses: ${remainingGuesses} (${pct}%)`;
@@ -54,6 +58,7 @@ document.addEventListener("keydown", (e) => {
                 console.log("CALLBACK RESPONSE:", response);
                 if (response?.remaining !== undefined) {
                     remainingGuesses = response.remaining;
+                    solved = response.solved;
                     render();
                 }
             }
