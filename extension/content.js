@@ -1,34 +1,57 @@
 console.log("Wordle watcher active");
 console.log("EXTENSION CONTEXT TEST:", typeof chrome, chrome?.runtime);
 
-let buffer = "";
-let lastGuess = "";
-let solved = false;
-let remainingGuesses = 12972;
-
-function render() {
-    const pct = Math.round((remainingGuesses / 12972) * 100)
-    if (remainingGuesses === 12972) {
-        box.innerText = `Possible guesses: ${remainingGuesses} (100%)`;
-    } if (solved) {
-        box.innerText = "Good job!🎉"
-    }
-    else if (pct < 1) {
-        box.innerText = `Remaining valid guesses: ${remainingGuesses} (< 1%)`;
-    } else {
-        box.innerText = `Remaining valid guesses: ${remainingGuesses} (${pct}%)`;
-    }
-}
+const TOTAL_GUESSES = 12972;
 
 function getDateFromUrl(url) {
     const match = url.match(/(\d{4}-\d{2}-\d{2})\/?$/);
     return match ? match[1] : null;
 }
 
-const wordleDate = getDateFromUrl(location.href);
+let buffer = "";
+let lastGuess = "";
+let solved = false;
+let remainingGuesses = TOTAL_GUESSES;
+let currentUrl = location.href;
+let wordleDate = getDateFromUrl(currentUrl);
+
+function render() {
+    const pct = Math.round((remainingGuesses / TOTAL_GUESSES) * 100);
+
+    if (solved) {
+        box.innerText = "Good job!🎉";
+    } else if (remainingGuesses === TOTAL_GUESSES) {
+        box.innerText = `Possible guesses: ${remainingGuesses} (100%)`;
+    } else if (pct < 1) {
+        box.innerText = `Remaining valid guesses: ${remainingGuesses} (< 1%)`;
+    } else {
+        box.innerText = `Remaining valid guesses: ${remainingGuesses} (${pct}%)`;
+    }
+}
+
+function resetState() {
+    buffer = "";
+    lastGuess = "";
+    solved = false;
+    remainingGuesses = TOTAL_GUESSES;
+    render();
+
+    console.log("RESETTING for date:", wordleDate);
+
+    chrome.runtime.sendMessage(
+        { type: "reset", date: wordleDate },
+        (response) => {
+            console.log("RESET RESPONSE:", response);
+            if (response?.remaining !== undefined) {
+                remainingGuesses = response.remaining;
+                solved = false;
+                render();
+            }
+        }
+    );
+}
 
 document.addEventListener("keydown", (e) => {
-
     if (/^[a-zA-Z]$/.test(e.key)) {
         if (buffer.length < 5) buffer += e.key.toUpperCase();
     }
@@ -38,22 +61,17 @@ document.addEventListener("keydown", (e) => {
     }
 
     if (e.key === "Enter") {
-
         const guess = buffer;
         buffer = "";
 
         if (guess.length !== 5) return;
 
         lastGuess = guess;
-        //render();
 
-        console.log("SENDING GUESS", guess)
+        console.log("SENDING GUESS", guess);
 
         chrome.runtime.sendMessage(
-            {
-                type: "guess", guess,
-                date: wordleDate
-            },
+            { type: "guess", guess, date: wordleDate },
             (response) => {
                 console.log("CALLBACK RESPONSE:", response);
                 if (response?.remaining !== undefined) {
@@ -79,17 +97,17 @@ box.style.fontFamily = "monospace";
 box.style.fontSize = "14px";
 box.style.borderRadius = "8px";
 
-box.innerText = "Remaining valid guesses: 12972 (100%)";
+box.innerText = `Remaining valid guesses: ${TOTAL_GUESSES} (100%)`;
 
 document.body.appendChild(box);
 
-chrome.runtime.sendMessage({
-    type: "guess",
-    guess: guess
-}, (response) => {
-    console.log("BG RESPONSE:", response);
 
-    if (response?.data) {
-        box.innerText = `Remaining guesses: ${response.data}`;
+resetState();
+
+setInterval(() => {
+    if (location.href !== currentUrl) {
+        currentUrl = location.href;
+        wordleDate = getDateFromUrl(currentUrl);
+        resetState();
     }
-});
+}, 750);

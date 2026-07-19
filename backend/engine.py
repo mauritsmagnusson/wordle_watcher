@@ -13,6 +13,14 @@ alpha = {chr(i): "W" for i in range(ord("a"), ord("z") + 1)}
 today = date.today().isoformat()
 
 
+def new_game():
+    global cands, greens, yellows, blacks
+    cands = set(WORDS)
+    greens = {}
+    yellows = {}
+    blacks = set()
+
+
 def get_answer(date=today):
     try:
         response = requests.get(f"https://www.nytimes.com/svc/wordle/v2/{date}.json")
