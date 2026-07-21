@@ -44,7 +44,7 @@ def guess():
         guess = data.get("guess")
         date = data.get("date")
 
-        print(f"Worlde date: {date}")
+        # print(f"Worlde date: {date}")
         answer = engine.get_answer(date) if date else engine.get_answer()
 
         _, solved = engine.feedback(guess, answer)

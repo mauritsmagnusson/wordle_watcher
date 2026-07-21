@@ -42,6 +42,11 @@ blacks = set()
 
 
 def feedback(guess, answer):
+
+    if guess not in WORDS:
+        print("Invalid guess")
+        return
+
     guess, answer = guess.lower(), answer.lower()
     feedback = [""] * 5
 

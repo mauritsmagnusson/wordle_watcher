@@ -87,11 +87,11 @@ document.addEventListener("keydown", (e) => {
 const box = document.createElement("div");
 
 box.style.position = "fixed";
-box.style.top = "20px";
+box.style.top = "120px";
 box.style.right = "20px";
 box.style.zIndex = "999999";
 box.style.padding = "10px";
-box.style.background = "black";
+box.style.background = "#121213";
 box.style.color = "white";
 box.style.fontFamily = "monospace";
 box.style.fontSize = "14px";
