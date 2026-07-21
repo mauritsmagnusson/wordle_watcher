@@ -13,6 +13,9 @@
             "matches": [
                 "https://www.nytimes.com/games/wordle/*"
             ],
+            "exclude_matches": [
+                "https://www.nytimes.com/games/wordle/archive*"
+            ],
             "js": [
                 "content.js"
             ]
