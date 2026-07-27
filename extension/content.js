@@ -8,6 +8,13 @@ function getDateFromUrl(url) {
     return match ? match[1] : null;
 }
 
+function getHardMode() {
+    const wordleKey = Object.keys(localStorage).find(k => k.startsWith('games-state-wordleV2/'));
+    const stateRaw = wordleKey ? localStorage.getItem(wordleKey) : null;
+    const state = stateRaw ? JSON.parse(stateRaw) : null;
+    return state?.states?.[0]?.data?.hardMode ?? false;
+}
+
 let buffer = "";
 let lastGuess = "";
 let solved = false;
@@ -30,16 +37,18 @@ function render() {
 }
 
 function resetState() {
+    currHardMode = getHardMode()
+
     buffer = "";
     lastGuess = "";
     solved = false;
     remainingGuesses = TOTAL_GUESSES;
     render();
 
-    console.log("RESETTING for date:", wordleDate);
+    console.log("RESETTING for date:", wordleDate, "hardMode:", currHardMode);
 
     chrome.runtime.sendMessage(
-        { type: "reset", date: wordleDate },
+        { type: "reset", date: wordleDate, hardMode: currHardMode },
         (response) => {
             console.log("RESET RESPONSE:", response);
             if (response?.remaining !== undefined) {
@@ -71,7 +80,7 @@ document.addEventListener("keydown", (e) => {
         console.log("SENDING GUESS", guess);
 
         chrome.runtime.sendMessage(
-            { type: "guess", guess, date: wordleDate },
+            { type: "guess", guess, date: wordleDate, hardMode: getHardMode() },
             (response) => {
                 console.log("CALLBACK RESPONSE:", response);
                 if (response?.remaining !== undefined) {
@@ -109,5 +118,22 @@ setInterval(() => {
         currentUrl = location.href;
         wordleDate = getDateFromUrl(currentUrl);
         resetState();
+    }
+
+    const latestHardMode = getHardMode();
+    if (latestHardMode !== currHardMode) {
+        currHardMode = latestHardMode;
+        console.log("HARD MODE CHANGED mid-game:", currHardMode);
+
+        chrome.runtime.sendMessage(
+            { type: "hardModeChange", date: wordleDate, hardMode: currHardMode },
+            (response) => {
+                console.log("HARD MODE CHANGE RESPONSE:", response);
+                if (response?.remaining !== undefined) {
+                    remainingGuesses = response.remaining;
+                    render();
+                }
+            }
+        );
     }
 }, 750);

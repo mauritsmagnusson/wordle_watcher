@@ -8,7 +8,8 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 guess: msg.guess,
-                date: msg.date
+                date: msg.date,
+                hardMode: msg.hardMode
             })
         })
             .then((r) => r.json())
@@ -22,18 +23,36 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         return true;
     }
 
-    if (msg.type === "reset") {
+    else if (msg.type === "reset") {
         fetch(`${SERVER}/reset`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                date: msg.date
+                date: msg.date,
+                hardMode: msg.hardMode
             })
         })
             .then((r) => r.json())
             .then((data) => {
                 sendResponse({ ok: true, remaining: data.remaining });
             })
+            .catch((err) => {
+                sendResponse({ ok: false, error: String(err) });
+            });
+
+        return true;
+    }
+
+    else if (msg.type === "hardModeChange") {
+        fetch(`${SERVER}/hardModeChange`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                date: msg.date,
+                hardMode: msg.hardMode
+            })
+        })
+            .then((r) => r.json())
             .catch((err) => {
                 sendResponse({ ok: false, error: String(err) });
             });

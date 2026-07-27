@@ -11,14 +11,17 @@ with open(f"{Path().cwd()}/words.txt") as f:
 cands = set(WORDS)
 alpha = {chr(i): "W" for i in range(ord("a"), ord("z") + 1)}
 today = date.today().isoformat()
+guesses_made = {}
+hard_mode = True
 
 
 def new_game():
-    global cands, greens, yellows, blacks
+    global cands, greens, yellows, blacks, guesses_made
     cands = set(WORDS)
     greens = {}
     yellows = {}
     blacks = set()
+    guesses_made = {}
 
 
 def get_answer(date=today):
@@ -41,12 +44,15 @@ yellows = {}
 blacks = set()
 
 
-def feedback(guess, answer):
+def feedback(guess, answer, hard_mode):
 
+    global guesses_made
     guess, answer = guess.lower(), answer.lower()
     if guess not in WORDS:
-        print("Invalid guess")
-        return
+        return None, None
+
+    if hard_mode and not is_valid_hard_mode_guess(guess):
+        return None, None
 
     feedback = [""] * 5
 
@@ -68,8 +74,9 @@ def feedback(guess, answer):
         else:
             yellows[i] = c
             feedback[i] = "Y"
-    # print(feedback)
+    print(feedback)
     solved = all(r == "G" for r in feedback)
+    guesses_made[guess] = feedback
     return feedback, solved
 
 
@@ -101,3 +108,20 @@ def prune_words(cands):
 
     cands = [c for c in cands if c not in prune]
     return cands
+
+
+def is_valid_hard_mode_guess(guess):
+    global guesses_made
+
+    if not guesses_made:
+        return True
+    for w, f in guesses_made.items():
+        for i, col in enumerate(f):
+            letter = w[i]
+            if col != "B" and w[i] not in guess:
+                return False
+            elif col == "G" and findOccurrences(w, letter) != findOccurrences(
+                guess, letter
+            ):
+                return False
+    return True
