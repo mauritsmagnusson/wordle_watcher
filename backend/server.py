@@ -31,7 +31,7 @@ def reset():
     global current_date
     global hard_mode
     data = request.get_json(silent=True) or {}
-    date_ = data.get("date", date.today().isoformat())
+    date_ = data.get("date") or date.today().isoformat()
     hard_mode = data.get("hardMode")
     hard_mode_status = "on" if hard_mode else "off"
 

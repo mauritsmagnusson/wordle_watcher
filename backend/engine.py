@@ -28,6 +28,7 @@ def get_answer(date=today):
     try:
         response = requests.get(f"https://www.nytimes.com/svc/wordle/v2/{date}.json")
         if response.status_code == 200:
+            # print(f"Answer: {response.json()['solution']}")
             return response.json()["solution"]
         else:
             print(f"status: {response.status_code}")
